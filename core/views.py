@@ -1,10 +1,32 @@
 # Basear em class-based views
-from django.views.generic import TemplateView
+from typing import Any
+from django.http import HttpResponse
+from django.views.generic import FormView
+from django.urls import reverse_lazy
+from django.contrib import messages
+from .models import Servico, Funcionario, Features
+from .forms import ContatoForm
 
 
-class IndexView(TemplateView):
+class IndexView(FormView):
     template_name = 'index.html'
+    form_class = ContatoForm
+    success_url = reverse_lazy('index')
 
+    def get_context_data(self, **kwargs):
+        context = super(IndexView, self).get_context_data(**kwargs)
+        # Ordena aleatóriamente os dados mostrando uma execução diferente a cada atualização de página
+        # context['servicos'] = Servico.objects.order_by('?').all()
+        context['servicos'] = Servico.objects.all()
+        context['funcionarios'] = Funcionario.objects.all()
+        context['recursos'] = Features.objects.all()
+        return context
 
-# class TesteView(TemplateView):
-#     template_name = '500.html'
+    def form_valid(self, form, *args, **kwargs):
+        form.send_mail()
+        messages.success(self.request, 'E-mail enviado com sucesso!')
+        return super(IndexView, self).form_valid(form, *args, **kwargs)
+
+    def form_invalid(self, form, *args, **kwargs):
+        messages.error(self.request, 'Erro ao enviar e-mail!')
+        return super(IndexView, self).form_invalid(form, *args, **kwargs)

@@ -1,5 +1,12 @@
+import uuid
 from django.db import models
 from stdimage.models import StdImageField
+
+
+def get_file_path(_instance, filename):
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+    return filename
 
 
 class Base(models.Model):
@@ -48,7 +55,7 @@ class Funcionario(Base):
     cargo = models.ForeignKey(
         'core.Cargo', verbose_name='Cargo', on_delete=models.CASCADE)
     bio = models.TextField('Bio', max_length=200)
-    imagem = StdImageField('Imagem', upload_to='equipe', variations={
+    imagem = StdImageField('Imagem', upload_to=get_file_path, variations={
                            'thumb': {'width': 480, 'height': 480, 'crop': True}})
     facebook = models.CharField('Facebook', max_length=100, default="#")
     twitter = models.CharField('Twitter', max_length=100, default="#")
@@ -60,3 +67,28 @@ class Funcionario(Base):
 
     def __str__(self):
         return self.nome
+
+
+class Features(Base):
+    ICONE_CHOICES = (
+        ('lni-rocket', 'Foguete'),
+        ('lni-laptop-phone', 'Laptop/Phone'),
+        ('lni-cog', 'Engrenagem'),
+        ('lni-leaf', 'Folha'),
+        ('lni-layers', 'Camandas'),
+    )
+    COL_CHOICES = (
+        ('left','Esquerda'),
+        ('right','Direita'),
+    )
+    recurso = models.CharField('Recurso', max_length=100)
+    descricao = models.TextField('Descrição', max_length=200)
+    icone = models.CharField('Ícone', max_length=16, choices=ICONE_CHOICES)
+    lado = models.CharField('Lado', max_length=16, choices=COL_CHOICES, default='left')
+
+    class Meta:
+        verbose_name = 'Recurso'
+        verbose_name_plural = 'Recursos'
+
+    def __str__(self):
+        return self.recurso
